@@ -13,11 +13,11 @@ using System.Text;
 using System.IO.Compression;
 using Assimp;
 
-namespace ModelToVMDConverter
+namespace FreneticModelConverter
 {
     class Program
     {
-        public static string EXENAME = "ModelToVMDConverter.exe"; // TODO: An env var for this?
+        public static string EXENAME = "FreneticModelConverter.exe"; // TODO: An env var for this?
 
         public static Encoding UTF8 = new UTF8Encoding(false);
 
@@ -41,12 +41,12 @@ namespace ModelToVMDConverter
             Console.WriteLine("Pre-transform = " + PT);
             Console.WriteLine("Texture = " + TEXTURE);
             Scene fdata = ac.ImportFile(fname, PostProcessSteps.Triangulate | PostProcessSteps.FlipWindingOrder);
-            if (File.Exists(fname + ".vmd"))
+            if (File.Exists(fname + ".fmd"))
             {
-                File.Delete(fname + ".vmd");
+                File.Delete(fname + ".fmd");
             }
-            FileStream fs = File.OpenWrite(fname + ".vmd");
-            File.WriteAllText(fname + ".skin", ExportModelData(fdata, fs));
+            FileStream fs = File.OpenWrite(fname + ".fmd");
+            File.WriteAllText(fname + ".fmi", ExportModelData(fname, fdata, fs));
             fs.Flush();
             fs.Close();
         }
@@ -55,9 +55,9 @@ namespace ModelToVMDConverter
 
         static bool TEXTURE = false;
 
-        static string ExportModelData(Scene scene, Stream baseoutstream)
+        static string ExportModelData(string fname, Scene scene, Stream baseoutstream)
         {
-            baseoutstream.WriteByte((byte)'V');
+            baseoutstream.WriteByte((byte)'F');
             baseoutstream.WriteByte((byte)'M');
             baseoutstream.WriteByte((byte)'D');
             baseoutstream.WriteByte((byte)'0');
@@ -69,6 +69,7 @@ namespace ModelToVMDConverter
             outstream.WriteInt(scene.MeshCount);
             Console.WriteLine("Writing " + scene.MeshCount + " meshes...");
             StringBuilder sb = new StringBuilder();
+            sb.Append("model=").Append(fname).Append("\n");
             for (int m = 0; m < scene.MeshCount; m++)
             {
                 Mesh mesh = scene.Meshes[m];

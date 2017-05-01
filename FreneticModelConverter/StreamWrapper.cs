@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace ModelToVMDConverter
+namespace FreneticModelConverter
 {
     public class StreamWrapper
     {
