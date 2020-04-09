@@ -1,24 +1,3 @@
-FreneticModelConverter
-======================
-
-The Frenetic Model Converter: A system that converts any given model format to `.fmd` files (and produces reference `.fmi` files)
-
-### Status
-
-This project is fairly stable, but has some trouble with AssImp reading files weirdly.
-
-### Licensing pre-note:
-
-This is an open source project, provided entirely freely, for everyone to use and contribute to.
-
-If you make any changes that could benefit the community as a whole, please contribute upstream.
-
-### The short of the license is:
-
-You can do basically whatever you want, except you may not hold any developer liable for what you do with the software.
-
-### The long version of the license follows:
-
 The MIT License (MIT)
 
 Copyright (c) 2015-2020 Frenetic LLC, All Rights Reserved.
