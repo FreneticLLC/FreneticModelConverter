@@ -24,37 +24,40 @@ namespace FreneticModelConverter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine(EXENAME + " <filename>");
+                Console.WriteLine($"{EXENAME} <filename> ['pretrans']['texture']");
+                Console.WriteLine($"For example: {EXENAME} modelname.dae");
+                Console.WriteLine($"For example (2): {EXENAME} myfile.dae texture");
+                Console.WriteLine($"For example (3): {EXENAME} somepath/somemodel.dae pretranstexture");
                 return;
             }
-            string fname = args[0];
-            if (!File.Exists(fname))
+            string filename = args[0];
+            if (!File.Exists(filename))
             {
-                Console.WriteLine("Invalid filename.");
-                Console.WriteLine(EXENAME + " <filename>");
+                Console.WriteLine("Invalid filename (does not exist).");
+                Console.WriteLine($"{EXENAME} <filename>");
                 return;
             }
-            AssimpContext ac = new AssimpContext();
-            PT = args.Length > 1 && args[1].ToLower().Contains("pretrans");
-            TEXTURE = args.Length > 1 && args[1].ToLower().Contains("texture");
-            Console.WriteLine("Pre-transform = " + PT);
-            Console.WriteLine("Texture = " + TEXTURE);
-            Scene fdata = ac.ImportFile(fname, PostProcessSteps.Triangulate | PostProcessSteps.FlipWindingOrder);
-            if (File.Exists(fname + ".fmd"))
+            AssimpContext context = new AssimpContext();
+            PreTransformNode = args.Length > 1 && args[1].ToLower().Contains("pretrans");
+            UseModelTexture = args.Length > 1 && args[1].ToLower().Contains("texture");
+            Console.WriteLine($"Pre-transform model to animation node = {PreTransformNode}");
+            Console.WriteLine($"Use file texture names = {UseModelTexture}");
+            Scene filedata = context.ImportFile(filename, PostProcessSteps.Triangulate | PostProcessSteps.FlipWindingOrder);
+            if (File.Exists($"{filename}.fmd"))
             {
-                File.Delete(fname + ".fmd");
+                File.Delete($"{filename}.fmd");
             }
-            FileStream fs = File.OpenWrite(fname + ".fmd");
-            File.WriteAllText(fname + ".fmi", ExportModelData(fname, fdata, fs));
-            fs.Flush();
-            fs.Close();
+            FileStream fileOutputStream = File.OpenWrite($"{filename}.fmd");
+            File.WriteAllText($"{filename}.fmi", ExportModelData(filename, filedata, fileOutputStream));
+            fileOutputStream.Flush();
+            fileOutputStream.Close();
         }
 
-        static bool PT = false;
+        public static bool PreTransformNode = false;
 
-        static bool TEXTURE = false;
+        public static bool UseModelTexture = false;
 
-        static string ExportModelData(string fname, Scene scene, Stream baseoutstream)
+        static string ExportModelData(string filename, Scene scene, Stream baseoutstream)
         {
             baseoutstream.WriteByte((byte)'F');
             baseoutstream.WriteByte((byte)'M');
@@ -62,55 +65,53 @@ namespace FreneticModelConverter
             baseoutstream.WriteByte((byte)'0');
             baseoutstream.WriteByte((byte)'0');
             baseoutstream.WriteByte((byte)'1');
-            MemoryStream ms = new MemoryStream();
-            StreamWrapper outstream = new StreamWrapper(ms);
-            WriteMatrix4x4(scene.RootNode.Transform, outstream);
+            MemoryStream outputStreamInternal = new MemoryStream();
+            StreamWrapper outstream = new StreamWrapper(outputStreamInternal);
+            outstream.WriteMatrix4x4(scene.RootNode.Transform);
             outstream.WriteInt(scene.MeshCount);
-            Console.WriteLine("Writing " + scene.MeshCount + " meshes...");
-            StringBuilder sb = new StringBuilder();
-            sb.Append("model=").Append(fname).Append("\n");
-            for (int m = 0; m < scene.MeshCount; m++)
+            Console.WriteLine($"Writing {scene.MeshCount} meshes...");
+            StringBuilder textureFileBuilder = new StringBuilder();
+            textureFileBuilder.Append($"model={filename}\n");
+            for (int meshId = 0; meshId < scene.MeshCount; meshId++)
             {
-                Mesh mesh = scene.Meshes[m];
-                Console.WriteLine("Writing mesh: " + mesh.Name);
-                string nname = mesh.Name.ToLower().Replace('#', '_').Replace('.', '_');
-                if (PT && GetNode(scene.RootNode, nname) == null)
+                Mesh mesh = scene.Meshes[meshId];
+                Console.WriteLine($"Writing mesh: {mesh.Name}");
+                string nodeName = mesh.Name.ToLower().Replace('#', '_').Replace('.', '_');
+                if (PreTransformNode && GetNode(scene.RootNode, nodeName) == null)
                 {
-                    Console.WriteLine("NO NODE FOR: " + nname);
+                    Console.WriteLine($"NO NODE FOR: {nodeName}");
                     continue;
                 }
-                Matrix4x4 mat = PT ? GetNode(scene.RootNode, nname).Transform * scene.RootNode.Transform : Matrix4x4.Identity;
-                if (TEXTURE)
+                Matrix4x4 transformMatrix = PreTransformNode ? GetNode(scene.RootNode, nodeName).Transform * scene.RootNode.Transform : Matrix4x4.Identity;
+                if (UseModelTexture)
                 {
                     Material mater = scene.Materials[mesh.MaterialIndex];
                     if (mater.HasTextureDiffuse)
                     {
-                        sb.Append(mesh.Name + "=" + mater.TextureDiffuse.FilePath + "\n");
+                        textureFileBuilder.Append($"{mesh.Name}={mater.TextureDiffuse.FilePath}\n");
                     }
                     if (mater.HasTextureSpecular)
                     {
-                        sb.Append(mesh.Name + ":::specular=" + scene.Materials[mesh.MaterialIndex].TextureSpecular.FilePath + "\n");
+                        textureFileBuilder.Append($"{mesh.Name}:::specular={scene.Materials[mesh.MaterialIndex].TextureSpecular.FilePath}\n");
                     }
                     if (mater.HasTextureReflection)
                     {
-                        sb.Append(mesh.Name + ":::reflectivity=" + scene.Materials[mesh.MaterialIndex].TextureReflection.FilePath + "\n");
+                        textureFileBuilder.Append($"{mesh.Name}:::reflectivity={scene.Materials[mesh.MaterialIndex].TextureReflection.FilePath}\n");
                     }
                     if (mater.HasTextureNormal)
                     {
-                        sb.Append(mesh.Name + ":::normal=" + scene.Materials[mesh.MaterialIndex].TextureNormal.FilePath + "\n");
+                        textureFileBuilder.Append($"{mesh.Name}:::normal={scene.Materials[mesh.MaterialIndex].TextureNormal.FilePath}\n");
                     }
                 }
                 else
                 {
-                    sb.Append(mesh.Name + "=UNKNOWN\n");
+                    textureFileBuilder.Append($"{mesh.Name}=UNKNOWN\n");
                 }
-                byte[] dat = UTF8.GetBytes(mesh.Name);
-                outstream.WriteInt(dat.Length);
-                outstream.BaseStream.Write(dat, 0, dat.Length);
+                outstream.WriteStringProper(mesh.Name);
                 outstream.WriteInt(mesh.VertexCount);
                 for (int v = 0; v < mesh.VertexCount; v++)
                 {
-                    WriteVector3D(mat * mesh.Vertices[v], outstream);
+                    outstream.WriteVector3D(transformMatrix * mesh.Vertices[v]);
                 }
                 outstream.WriteInt(mesh.FaceCount);
                 for (int f = 0; f < mesh.FaceCount; f++)
@@ -127,35 +128,33 @@ namespace FreneticModelConverter
                     outstream.WriteFloat(mesh.TextureCoordinateChannels[0][t].Y);
                 }
                 outstream.WriteInt(mesh.Normals.Count);
-                Matrix4x4 nmat = mat;
-                nmat.Inverse();
-                nmat.Transpose();
-                Matrix3x3 nmat3 = new Matrix3x3(nmat);
+                Matrix4x4 normalMatrixRaw = transformMatrix;
+                normalMatrixRaw.Inverse();
+                normalMatrixRaw.Transpose();
+                Matrix3x3 normalMatrix3 = new Matrix3x3(normalMatrixRaw);
                 for (int n = 0; n < mesh.Normals.Count; n++)
                 {
-                    WriteVector3D(nmat3 * mesh.Normals[n], outstream);
+                    outstream.WriteVector3D(normalMatrix3 * mesh.Normals[n]);
                 }
                 outstream.WriteInt(mesh.BoneCount);
                 for (int b = 0; b < mesh.BoneCount; b++)
                 {
                     Bone bone = mesh.Bones[b];
-                    byte[] bdat = UTF8.GetBytes(bone.Name);
-                    outstream.WriteInt(bdat.Length);
-                    outstream.BaseStream.Write(bdat, 0, bdat.Length);
+                    outstream.WriteStringProper(bone.Name);
                     outstream.WriteInt(bone.VertexWeightCount);
                     for (int v = 0; v < bone.VertexWeightCount; v++)
                     {
                         outstream.WriteInt(bone.VertexWeights[v].VertexID);
                         outstream.WriteFloat(bone.VertexWeights[v].Weight);
                     }
-                    WriteMatrix4x4(bone.OffsetMatrix, outstream);
+                    outstream.WriteMatrix4x4(bone.OffsetMatrix);
                 }
             }
             OutputNode(scene.RootNode, outstream);
-            byte[] msd = ms.ToArray();
-            msd = GZip(msd);
-            baseoutstream.Write(msd, 0, msd.Length);
-            return sb.ToString();
+            byte[] outputBytesRaw = outputStreamInternal.ToArray();
+            outputBytesRaw = GZip(outputBytesRaw);
+            baseoutstream.Write(outputBytesRaw, 0, outputBytesRaw.Length);
+            return textureFileBuilder.ToString();
         }
 
         static Node GetNode(Node root, string namelow)
@@ -175,17 +174,15 @@ namespace FreneticModelConverter
             return null;
         }
 
-        static void OutputNode(Node n, StreamWrapper outstream)
+        static void OutputNode(Node node, StreamWrapper outstream)
         {
-            byte[] dat = UTF8.GetBytes(n.Name);
-            outstream.WriteInt(dat.Length);
-            outstream.BaseStream.Write(dat, 0, dat.Length);
-            Console.WriteLine("Output node: " + n.Name);
-            WriteMatrix4x4(n.Transform, outstream);
-            outstream.WriteInt(n.ChildCount);
-            for (int i = 0; i < n.ChildCount; i++)
+            outstream.WriteStringProper(node.Name);
+            Console.WriteLine($"Output node: {node.Name}");
+            outstream.WriteMatrix4x4(node.Transform);
+            outstream.WriteInt(node.ChildCount);
+            for (int i = 0; i < node.ChildCount; i++)
             {
-                OutputNode(n.Children[i], outstream);
+                OutputNode(node.Children[i], outstream);
             }
         }
 
