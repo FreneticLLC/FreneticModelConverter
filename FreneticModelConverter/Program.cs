@@ -171,7 +171,7 @@ namespace FreneticModelConverter
                 Node res = GetNode(child, namelow);
                 if (res != null)
                 {
-                    return child;
+                    return res;
                 }
             }
             return null;
