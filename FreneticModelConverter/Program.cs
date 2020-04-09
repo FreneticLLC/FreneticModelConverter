@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Reflection;
 using System.IO.Compression;
 using Assimp;
 
@@ -17,7 +18,7 @@ namespace FreneticModelConverter
 {
     class Program
     {
-        public static string EXENAME = "FreneticModelConverter.exe"; // TODO: An env var for this?
+        public static readonly string EXENAME = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
 
         public static Encoding UTF8 = new UTF8Encoding(false);
 
@@ -28,7 +29,7 @@ namespace FreneticModelConverter
                 Console.WriteLine(EXENAME + " <filename>");
                 return;
             }
-            string fname = Environment.CurrentDirectory + "/" + args[0];
+            string fname = args[0];
             if (!File.Exists(fname))
             {
                 Console.WriteLine("Invalid filename.");
