@@ -39,7 +39,7 @@ namespace FreneticModelConverter
         }
 
         /// <summary>
-        /// Writes a 32-bit <see cref="int"/> to the output stream.
+        /// Writes a 32-bit <see cref="int"/> to the output stream. Produces 4 bytes of data.
         /// </summary>
         /// <param name="i">The integer value.</param>
         public void WriteInt(int i)
@@ -49,7 +49,7 @@ namespace FreneticModelConverter
         }
 
         /// <summary>
-        /// Writes a 32-bit <see cref="float"/> to the output stream.
+        /// Writes a 32-bit <see cref="float"/> to the output stream. Produces 4 bytes of data.
         /// </summary>
         /// <param name="f">The floating-point value.</param>
         public void WriteFloat(float f)
@@ -59,7 +59,7 @@ namespace FreneticModelConverter
         }
 
         /// <summary>
-        /// Writes a <see cref="Vector3D"/> to the output stream.
+        /// Writes a <see cref="Vector3D"/> to the output stream. Produces 12 bytes of data.
         /// </summary>
         /// <param name="vector">The 3D vector value.</param>
         public void WriteVector3D(Vector3D vector)
@@ -70,7 +70,7 @@ namespace FreneticModelConverter
         }
 
         /// <summary>
-        /// Writes a <see cref="Matrix4x4"/> to the output stream.
+        /// Writes a <see cref="Matrix4x4"/> to the output stream. Produces 64 bytes of data.
         /// </summary>
         /// <param name="matrix">The 4x4 matrix value.</param>
         public void WriteMatrix4x4(Matrix4x4 matrix)
