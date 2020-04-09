@@ -16,10 +16,20 @@ using Assimp;
 
 namespace FreneticModelConverter
 {
+    /// <summary>
+    /// Entry point and primary class.
+    /// </summary>
     class Program
     {
+        /// <summary>
+        /// The name of the executable file (useful for error message output).
+        /// </summary>
         public static readonly string EXENAME = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
 
+        /// <summary>
+        /// Program entry point.
+        /// </summary>
+        /// <param name="args">Parameters passed to execution.</param>
         static void Main(string[] args)
         {
             if (args.Length < 1)
@@ -53,10 +63,24 @@ namespace FreneticModelConverter
             fileOutputStream.Close();
         }
 
+        /// <summary>
+        /// Whether to pre-transform the model to its animation node data.
+        /// </summary>
         public static bool PreTransformNode = false;
 
+        /// <summary>
+        /// Whether to assume the file has proper texture file paths pre-included
+        /// (if not, the .fmi file will just show texture path as "unknown").
+        /// </summary>
         public static bool UseModelTexture = false;
 
+        /// <summary>
+        /// Exports the given model to the given output stream.
+        /// </summary>
+        /// <param name="filename">Name of the model.</param>
+        /// <param name="scene">The model to output.</param>
+        /// <param name="baseoutstream">The stream to output to.</param>
+        /// <returns>The texture output data.</returns>
         static string ExportModelData(string filename, Scene scene, Stream baseoutstream)
         {
             baseoutstream.WriteByte((byte)'F');
@@ -157,6 +181,12 @@ namespace FreneticModelConverter
             return textureFileBuilder.ToString();
         }
 
+        /// <summary>
+        /// Gets the animation node by name from a node tree.
+        /// </summary>
+        /// <param name="root">The root of the node tree.</param>
+        /// <param name="namelow">The (pre-lowercased) name to look for.</param>
+        /// <returns>The node named, or null.</returns>
         static Node GetNode(Node root, string namelow)
         {
             if (root.Name.ToLower() == namelow)
@@ -174,6 +204,11 @@ namespace FreneticModelConverter
             return null;
         }
 
+        /// <summary>
+        /// Outputs an animation node to the given output stream.
+        /// </summary>
+        /// <param name="node">The node to output.</param>
+        /// <param name="outstream">The stream to output to.</param>
         static void OutputNode(Node node, StreamWrapper outstream)
         {
             outstream.WriteStringProper(node.Name);
@@ -186,6 +221,11 @@ namespace FreneticModelConverter
             }
         }
 
+        /// <summary>
+        /// Compresses a data stream using the GZip algorithm.
+        /// </summary>
+        /// <param name="input">The data to compress.</param>
+        /// <returns>The compressed data.</returns>
         public static byte[] GZip(byte[] input)
         {
             MemoryStream memstream = new MemoryStream();
