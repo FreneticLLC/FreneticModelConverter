@@ -20,8 +20,6 @@ namespace FreneticModelConverter
     {
         public static readonly string EXENAME = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
 
-        public static Encoding UTF8 = new UTF8Encoding(false);
-
         static void Main(string[] args)
         {
             if (args.Length < 1)
@@ -189,24 +187,6 @@ namespace FreneticModelConverter
             {
                 OutputNode(n.Children[i], outstream);
             }
-        }
-
-        static void WriteMatrix4x4(Matrix4x4 mat, StreamWrapper outstream)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    outstream.WriteFloat(mat[i + 1, j + 1]);
-                }
-            }
-        }
-
-        static void WriteVector3D(Vector3D vec, StreamWrapper outstream)
-        {
-            outstream.WriteFloat(vec.X);
-            outstream.WriteFloat(vec.Y);
-            outstream.WriteFloat(vec.Z);
         }
 
         public static byte[] GZip(byte[] input)

@@ -11,11 +11,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using Assimp;
 
 namespace FreneticModelConverter
 {
     public class StreamWrapper
     {
+        public static readonly Encoding UTF8 = new UTF8Encoding(false);
         public Stream BaseStream;
 
         public StreamWrapper(Stream stream)
@@ -26,21 +28,38 @@ namespace FreneticModelConverter
         public void WriteInt(int i)
         {
             byte[] bits = BitConverter.GetBytes(i);
-            if (!BitConverter.IsLittleEndian)
-            {
-                bits = bits.Reverse().ToArray();
-            }
             BaseStream.Write(bits, 0, bits.Length);
         }
 
         public void WriteFloat(float f)
         {
             byte[] bits = BitConverter.GetBytes(f);
-            if (!BitConverter.IsLittleEndian)
-            {
-                bits = bits.Reverse().ToArray();
-            }
             BaseStream.Write(bits, 0, bits.Length);
+        }
+
+        public void WriteVector3D(Vector3D vector)
+        {
+            WriteFloat(vector.X);
+            WriteFloat(vector.Y);
+            WriteFloat(vector.Z);
+        }
+
+        public void WriteMatrix4x4(Matrix4x4 matrix)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    WriteFloat(matrix[i + 1, j + 1]);
+                }
+            }
+        }
+
+        public void WriteStringProper(string input)
+        {
+            byte[] inputBytes = UTF8.GetBytes(input);
+            WriteInt(inputBytes.Length);
+            BaseStream.Write(inputBytes, 0, inputBytes.Length);
         }
     }
 }
