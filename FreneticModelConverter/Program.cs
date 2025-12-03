@@ -53,12 +53,14 @@ namespace FreneticModelConverter
             Console.WriteLine($"Pre-transform model to animation node = {PreTransformNode}");
             Console.WriteLine($"Use file texture names = {UseModelTexture}");
             Scene filedata = context.ImportFile(filename, PostProcessSteps.Triangulate | PostProcessSteps.FlipWindingOrder);
-            if (File.Exists($"{filename}.fmd"))
+            int dot = filename.LastIndexOf('.');
+            string cleanName = dot == 1 ? filename : filename.Substring(0, dot);
+            if (File.Exists($"{cleanName}.fmd"))
             {
-                File.Delete($"{filename}.fmd");
+                File.Delete($"{cleanName}.fmd");
             }
-            FileStream fileOutputStream = File.OpenWrite($"{filename}.fmd");
-            File.WriteAllText($"{filename}.fmi", ExportModelData(filename, filedata, fileOutputStream));
+            FileStream fileOutputStream = File.OpenWrite($"{cleanName}.fmd");
+            File.WriteAllText($"{cleanName}.fmi", ExportModelData(Path.GetFileNameWithoutExtension(filename), filedata, fileOutputStream));
             fileOutputStream.Flush();
             fileOutputStream.Close();
         }

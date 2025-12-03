@@ -20,12 +20,14 @@ The "texture" option means to assume the texture paths in the source file are pr
 
 This project is fairly stable, but has some trouble with AssImp reading files weirdly.
 
+Due to limits with AssImp, this runs on Windows only, but produces files that work anywhere.
+
 ## The Format
 
 This format exists primarily for the sake of having a model format that [the Frenetic Game Engine](https://github.com/FreneticLLC/FreneticGameEngine) can rely on.
 
 The format has the following properties:
-- **Unambigious.** This means there are no variants or oddities allowed. This is a problem with many common file formats and makes it difficulty to reliably load model files produced by different sources. As an example of the lack of ambiguity: all faces are triangles, no quads or anything else.
+- **Unambiguous.** This means there are no variants or oddities allowed. This is a problem with many common file formats and makes it difficulty to reliably load model files produced by different sources. As an example of the lack of ambiguity: all faces are triangles, no quads or anything else.
 - **Space-efficient.** This means the data is stored as raw small data (and then automatically compressed as well). This is a problem with many FOSS file formats that use very long ways of writing simple data (eg `.obj` and `.dae` are based on text, which is the opposite of space-efficient).
 - **Stores all model data.** This means that all data required for a 3D model is included - vertex positions, face vertex IDs, normal vectors, texture coordinates, bones and their vertex weights.
 - **Does not store non-model data.** This means that data related to 3D projects, but not specific to a 3D model, is excluded - cameras, animations, etc. are left out (animations can be tracked separately).
@@ -70,7 +72,7 @@ The file format is as follows:
 - Tree of nodes, starting with the root node, each encoded directly one after the other in line without padding. A node is defined as follows:
     - String: name of the node. Name usually corresponds to a mesh or bone by the same name.
     - Matrix4: The transformation of the node (relative to its parent node).
-    - Integer: The number of child nodes. Root and branch nodes often have one or more child nodes. Leaf nodes have zero for this value, and no data included for the following this.
+    - Integer: The number of child nodes. Root and branch nodes often have one or more child nodes. Leaf nodes have zero for this value, and no data included for the list following this.
     - List of child-nodes, each encoded directly one after the other in line without padding. Each contained node is defined the same as the definition of node that contains this line. That is, nodes recursively contain more nodes (a tree structure).
 
 ### Licensing pre-note:
@@ -87,7 +89,7 @@ You can do basically whatever you want, except you may not hold any developer li
 
 The MIT License (MIT)
 
-Copyright (c) 2015-2024 Frenetic LLC, All Rights Reserved.
+Copyright (c) 2015-2025 Frenetic LLC, All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
