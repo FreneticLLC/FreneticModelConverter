@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Frenetic LLC")]
 [assembly: AssemblyProduct("FreneticModelConverter")]
-[assembly: AssemblyCopyright("Copyright © Frenetic LLC 2015-2025")]
+[assembly: AssemblyCopyright("Copyright © Frenetic LLC 2015-2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
