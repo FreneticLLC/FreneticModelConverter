@@ -103,35 +103,38 @@ namespace FreneticModelConverter
                 Mesh mesh = scene.Meshes[meshId];
                 Console.WriteLine($"Writing mesh: {mesh.Name}");
                 string nodeName = mesh.Name.ToLower().Replace('#', '_').Replace('.', '_');
-                if (PreTransformNode && GetNode(scene.RootNode, nodeName) == null)
+                if (PreTransformNode && GetNode(scene.RootNode, nodeName) is null)
                 {
                     Console.WriteLine($"NO NODE FOR: {nodeName}");
                     continue;
                 }
                 Matrix4x4 transformMatrix = PreTransformNode ? GetNode(scene.RootNode, nodeName).Transform * scene.RootNode.Transform : Matrix4x4.Identity;
-                if (UseModelTexture)
+                if (!(mesh.Name.StartsWith("marker_") || mesh.Name.StartsWith("collisionconvex_") || mesh.Name.StartsWith("collisioncomplex_")))
                 {
-                    Material mater = scene.Materials[mesh.MaterialIndex];
-                    if (mater.HasTextureDiffuse)
+                    if (UseModelTexture)
                     {
-                        textureFileBuilder.Append($"{mesh.Name}={mater.TextureDiffuse.FilePath}\n");
+                        Material mater = scene.Materials[mesh.MaterialIndex];
+                        if (mater.HasTextureDiffuse)
+                        {
+                            textureFileBuilder.Append($"{mesh.Name}={mater.TextureDiffuse.FilePath}\n");
+                        }
+                        if (mater.HasTextureSpecular)
+                        {
+                            textureFileBuilder.Append($"{mesh.Name}:::specular={scene.Materials[mesh.MaterialIndex].TextureSpecular.FilePath}\n");
+                        }
+                        if (mater.HasTextureReflection)
+                        {
+                            textureFileBuilder.Append($"{mesh.Name}:::reflectivity={scene.Materials[mesh.MaterialIndex].TextureReflection.FilePath}\n");
+                        }
+                        if (mater.HasTextureNormal)
+                        {
+                            textureFileBuilder.Append($"{mesh.Name}:::normal={scene.Materials[mesh.MaterialIndex].TextureNormal.FilePath}\n");
+                        }
                     }
-                    if (mater.HasTextureSpecular)
+                    else
                     {
-                        textureFileBuilder.Append($"{mesh.Name}:::specular={scene.Materials[mesh.MaterialIndex].TextureSpecular.FilePath}\n");
+                        textureFileBuilder.Append($"{mesh.Name}=UNKNOWN\n");
                     }
-                    if (mater.HasTextureReflection)
-                    {
-                        textureFileBuilder.Append($"{mesh.Name}:::reflectivity={scene.Materials[mesh.MaterialIndex].TextureReflection.FilePath}\n");
-                    }
-                    if (mater.HasTextureNormal)
-                    {
-                        textureFileBuilder.Append($"{mesh.Name}:::normal={scene.Materials[mesh.MaterialIndex].TextureNormal.FilePath}\n");
-                    }
-                }
-                else
-                {
-                    textureFileBuilder.Append($"{mesh.Name}=UNKNOWN\n");
                 }
                 outstream.WriteStringProper(mesh.Name);
                 outstream.WriteInt(mesh.VertexCount);
