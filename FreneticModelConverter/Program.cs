@@ -13,6 +13,7 @@ using System.Text;
 using System.Reflection;
 using System.IO.Compression;
 using Assimp;
+using System.Security.Cryptography.X509Certificates;
 
 namespace FreneticModelConverter
 {
@@ -85,6 +86,7 @@ namespace FreneticModelConverter
         /// <returns>The texture output data.</returns>
         static string ExportModelData(string filename, Scene scene, Stream baseoutstream)
         {
+            float minX = 0, minY = 0, minZ = 0, maxX = 0, maxY = 0, maxZ = 0;
             baseoutstream.WriteByte((byte)'F');
             baseoutstream.WriteByte((byte)'M');
             baseoutstream.WriteByte((byte)'D');
@@ -140,7 +142,14 @@ namespace FreneticModelConverter
                 outstream.WriteInt(mesh.VertexCount);
                 for (int v = 0; v < mesh.VertexCount; v++)
                 {
-                    outstream.WriteVector3D(transformMatrix * mesh.Vertices[v]);
+                    Vector3D vert = transformMatrix * mesh.Vertices[v];
+                    outstream.WriteVector3D(vert);
+                    minX = Math.Min(minX, vert.X);
+                    minY = Math.Min(minY, vert.Y);
+                    minZ = Math.Min(minZ, vert.Z);
+                    maxX = Math.Max(maxX, vert.X);
+                    maxY = Math.Max(maxY, vert.Y);
+                    maxZ = Math.Max(maxZ, vert.Z);
                 }
                 outstream.WriteInt(mesh.FaceCount);
                 for (int f = 0; f < mesh.FaceCount; f++)
@@ -179,6 +188,7 @@ namespace FreneticModelConverter
                     outstream.WriteMatrix4x4(bone.OffsetMatrix);
                 }
             }
+            Console.WriteLine($"Model bounds: Min({minX}, {minY}, {minZ}) Max({maxX}, {maxY}, {maxZ}), size is ({maxX - minX}, {maxY - minY}, {maxZ - minZ})");
             OutputNode(scene.RootNode, outstream);
             byte[] outputBytesRaw = outputStreamInternal.ToArray();
             outputBytesRaw = GZip(outputBytesRaw);
